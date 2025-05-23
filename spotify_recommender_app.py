@@ -62,6 +62,10 @@ with st.sidebar.expander("🎚️ Filtrar por características musicales"):
             f"{col.capitalize()}", min_value=min_val, max_value=max_val, value=(min_val, max_val)
         )
 
+# Estado para mantener selección
+if 'cancion_seleccionada' not in st.session_state:
+    st.session_state['cancion_seleccionada'] = ""
+
 # Aplicar filtros al DataFrame
 df_filtrado = df.copy()
 if genero_seleccionado != "Seleccionar todos":
@@ -73,10 +77,16 @@ for col, (min_val, max_val) in filtros_rango.items():
 # -------------------------
 # 🎧 INTERFAZ PRINCIPAL
 # -------------------------
-st.title("🎧 Recomendador de Canciones Spotify")
+st.title("🎧 Recomendador de Canciones (Modelo K-Means)")
 
 canciones_opciones = sorted(df_filtrado['combo'].tolist())
-cancion_seleccionada = st.selectbox("🎵 Selecciona una canción:", [""] + canciones_opciones)
+seleccion = st.selectbox(
+    "🎵 Selecciona una canción:",
+    [""] + canciones_opciones,
+    index=canciones_opciones.index(st.session_state['cancion_seleccionada']) + 1 if st.session_state['cancion_seleccionada'] in canciones_opciones else 0
+)
+st.session_state['cancion_seleccionada'] = seleccion
+
 n_recomendaciones = st.slider("📊 Número de recomendaciones", min_value=1, max_value=50, value=5)
 
 # -------------------------
@@ -131,8 +141,8 @@ def recomendar_kmeans(df, track_name, artist, n=5):
 # -------------------------
 # 📊 Mostrar resultados
 # -------------------------
-if cancion_seleccionada:
-    nombre, artista = cancion_seleccionada.split(" - ", 1)
+if seleccion:
+    nombre, artista = seleccion.split(" - ", 1)
     if df_filtrado[(df_filtrado['track_name'] == nombre) & (df_filtrado['artists'] == artista)].empty:
         st.warning("⚠️ La canción seleccionada no está disponible con los filtros aplicados.")
     else:
