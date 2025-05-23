@@ -73,7 +73,7 @@ for col, (min_val, max_val) in filtros_rango.items():
 # -------------------------
 # 🎧 INTERFAZ PRINCIPAL
 # -------------------------
-st.title("🎧 Recomendador de Canciones (Modelo K-Means)")
+st.title("🎧 Recomendador de Canciones Spotify")
 
 canciones_opciones = sorted(df_filtrado['combo'].tolist())
 cancion_seleccionada = st.selectbox("🎵 Selecciona una canción:", [""] + canciones_opciones)
