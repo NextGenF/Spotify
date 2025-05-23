@@ -17,16 +17,43 @@ knn_model.fit(df[feature_cols])
 
 # Agrupación de géneros
 grupos_generos = {
-    "reggaeton": ["latin", "latino", "reggaeton", "salsa", "samba", "sertanejo", "mpb", "pagode"],
-    "pop": ["pop", "dance", "dancehall", "electropop", "synth-pop", "indie pop", "power-pop", "pop-film", "show-tunes", "j-pop", "k-pop"],
-    "rock": ["rock", "alt-rock", "alternative", "hard-rock", "psych-rock", "punk", "punk-rock", "pop-rock", "grunge", "garage", "metal", "metalcore", "heavy-metal", "death-metal", "black-metal", "classic rock", "rock-n-roll"],
-    "hiphop_urban": ["hip-hop", "rap", "trap", "r-n-b", "funk", "soul", "gospel", "reggae"],
-    "electronic": ["electronic", "edm", "house", "techno", "progressive-house", "deep-house", "electro", "detroit-techno", "disco", "trance", "dubstep", "drum-and-bass", "minimal-techno"],
-    "acoustic_folk": ["acoustic", "folk", "singer-songwriter", "country", "bluegrass", "honky-tonk", "americana"],
-    "classical_jazz": ["classical", "jazz", "opera", "piano"],
-    "world": ["world-music", "brazil", "turkish", "mandopop", "cantopop", "indian", "malay", "forro"],
-    "soundtrack_misc": ["study", "sleep", "sad", "children", "comedy", "christmas", "anime", "disney"]
+    "reggaeton_latino": [
+        "reggaeton", "latin", "latino", "salsa", "samba", "sertanejo", "mpb", "pagode", "romance", "spanish"
+    ],
+    "pop_comercial": [
+        "pop", "dance", "dancehall", "electropop", "synth-pop", "power-pop", "pop-film", "show-tunes", "party"
+    ],
+    "rock_metal": [
+        "rock", "alt-rock", "alternative", "grunge", "garage", "metal", "hard-rock", "metalcore", "heavy-metal",
+        "death-metal", "black-metal", "rock-n-roll", "punk", "punk-rock", "psych-rock", "rockabilly"
+    ],
+    "hiphop_rap_urban": [
+        "hip-hop", "rap", "trap", "r-n-b", "soul", "funk", "gospel", "reggae", "groove", "club", "guitar"
+    ],
+    "electronic_dance": [
+        "electronic", "edm", "house", "techno", "deep-house", "disco", "electro", "progressive-house", "trance",
+        "dubstep", "drum-and-bass", "detroit-techno", "minimal-techno", "breakbeat", "hardstyle", "idm", "industrial"
+    ],
+    "acoustic_folk_country": [
+        "acoustic", "folk", "singer-songwriter", "country", "bluegrass", "honky-tonk", "americana", "guitar"
+    ],
+    "classical_jazz": [
+        "classical", "jazz", "opera", "piano"
+    ],
+    "anime_jpop_kpop": [
+        "anime", "j-pop", "j-dance", "j-idol", "j-rock", "k-pop", "cantopop", "mandopop"
+    ],
+    "world_international": [
+        "brazil", "turkish", "indian", "malay", "iranian", "french", "german", "swedish", "world-music"
+    ],
+    "experimental_ambient": [
+        "ambient", "chill", "trip-hop", "new-age", "idm"
+    ],
+    "niche_misc": [
+        "study", "sleep", "children", "kids", "comedy", "disney", "happy", "sad", "blues", "ska"
+    ]
 }
+
 
 def obtener_grupo_genero(genero_base):
     for grupo, lista in grupos_generos.items():
