@@ -39,12 +39,9 @@ def obtener_grupo_genero(genero_base):
 # -------------------------
 st.sidebar.header("🎛️ Filtros de Canciones")
 
-with st.sidebar.expander("🎶 Géneros y artistas"):
+with st.sidebar.expander("🎶 Géneros musicales"):
     generos = sorted(df['track_genre'].unique().tolist())
     genero_seleccionado = st.selectbox("Selecciona un género:", ["Seleccionar todos"] + generos)
-
-    artistas = sorted(df['artists'].unique().tolist())
-    artista_seleccionado = st.selectbox("Selecciona un artista:", ["Seleccionar todos"] + artistas)
 
 with st.sidebar.expander("🧪 Filtrar por características"):
     filtros_rango = {}
@@ -57,13 +54,10 @@ with st.sidebar.expander("🧪 Filtrar por características"):
             value=(min_val, max_val)
         )
 
-# Aplicar filtros
+# Aplicar filtros al dataset base (NO afecta filtro de artista/canción)
 df_filtrado = df.copy()
 if genero_seleccionado != "Seleccionar todos":
     df_filtrado = df_filtrado[df_filtrado['track_genre'] == genero_seleccionado]
-
-if artista_seleccionado != "Seleccionar todos":
-    df_filtrado = df_filtrado[df_filtrado['artists'] == artista_seleccionado]
 
 for col, (min_val, max_val) in filtros_rango.items():
     df_filtrado = df_filtrado[(df_filtrado[col] >= min_val) & (df_filtrado[col] <= max_val)]
@@ -78,18 +72,27 @@ st.title("🎧 Recomendador de Canciones - Spotify")
 
 if 'cancion_seleccionada' not in st.session_state:
     st.session_state['cancion_seleccionada'] = ""
+if 'artista_filtro_ui' not in st.session_state:
+    st.session_state['artista_filtro_ui'] = ""
 
-if not df_filtrado.empty:
-    canciones_opciones = [""] + df_filtrado['combo'].tolist()
-    seleccion = st.selectbox(
-        "Selecciona una canción:",
-        canciones_opciones,
-        index=canciones_opciones.index(st.session_state['cancion_seleccionada']) if st.session_state['cancion_seleccionada'] in canciones_opciones else 0
-    )
-    st.session_state['cancion_seleccionada'] = seleccion
+# 🎤 Filtro de artista (solo afecta la lista de canciones)
+artistas_unicos = sorted(df_filtrado['artists'].unique().tolist())
+artista_ui = st.selectbox("Filtrar canciones por artista:", [""] + artistas_unicos, index=0)
+st.session_state['artista_filtro_ui'] = artista_ui
+
+# 🎵 Lista de canciones (filtrada por artista, ordenada alfabéticamente)
+if artista_ui:
+    canciones = df_filtrado[df_filtrado['artists'] == artista_ui]['combo'].sort_values().tolist()
 else:
-    st.warning("⚠️ No hay resultados para los filtros aplicados.")
-    seleccion = ""
+    canciones = df_filtrado['combo'].sort_values().tolist()
+
+canciones_opciones = [""] + canciones
+seleccion = st.selectbox(
+    "Selecciona una canción:",
+    canciones_opciones,
+    index=canciones_opciones.index(st.session_state['cancion_seleccionada']) if st.session_state['cancion_seleccionada'] in canciones_opciones else 0
+)
+st.session_state['cancion_seleccionada'] = seleccion
 
 n_recomendaciones = st.slider("Número de recomendaciones", min_value=1, max_value=50, value=5)
 
@@ -128,7 +131,7 @@ if seleccion:
     if df_filtrado[(df_filtrado['track_name'] == nombre) & (df_filtrado['artists'] == artista)].empty:
         st.warning("⚠️ La canción seleccionada no está disponible con los filtros aplicados.")
     else:
-        recomendaciones = recomendar_knn(df_filtrado, nombre, artista, n=n_recomendaciones)
+        recomendaciones = recomendar_knn(df, nombre, artista, n=n_recomendaciones)  # usar df completo, no df_filtrado
         st.write(f"### Recomendaciones para: **{nombre} - {artista}**")
         st.dataframe(recomendaciones)
 else:
