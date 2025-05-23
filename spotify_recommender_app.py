@@ -73,19 +73,32 @@ for col, (min_val, max_val) in filtros_rango.items():
 # -------------------------
 # 🎧 INTERFAZ PRINCIPAL
 # -------------------------
-st.title("🎧 Recomendador de Canciones")
+st.title("🎧 Recomendador de Canciones (Modelo K-Means)")
 
-# Filtro de artista (solo para desplegable de canciones)
-artistas = sorted(df_filtrado['artists'].unique())
-artista_ui = st.selectbox("🎤 Filtrar canciones por artista:", [""] + artistas)
-
-if artista_ui:
-    canciones_opciones = sorted(df_filtrado[df_filtrado['artists'] == artista_ui]['combo'].tolist())
-else:
-    canciones_opciones = sorted(df_filtrado['combo'].tolist())
-
+canciones_opciones = sorted(df_filtrado['combo'].tolist())
 cancion_seleccionada = st.selectbox("🎵 Selecciona una canción:", [""] + canciones_opciones)
 n_recomendaciones = st.slider("📊 Número de recomendaciones", min_value=1, max_value=50, value=5)
+
+# -------------------------
+# 📚 Grupos de géneros
+# -------------------------
+grupos_generos = {
+    "reggaeton": ["latin", "latino", "reggaeton", "salsa", "samba", "sertanejo", "mpb", "pagode"],
+    "pop": ["pop", "dance", "dancehall", "electropop", "synth-pop", "indie pop", "power-pop", "pop-film", "show-tunes", "j-pop", "k-pop"],
+    "rock": ["rock", "alt-rock", "alternative", "hard-rock", "psych-rock", "punk", "punk-rock", "pop-rock", "grunge", "garage", "metal", "metalcore", "heavy-metal", "death-metal", "black-metal", "classic rock", "rock-n-roll"],
+    "hiphop_urban": ["hip-hop", "rap", "trap", "r-n-b", "funk", "soul", "gospel", "reggae"],
+    "electronic": ["electronic", "edm", "house", "techno", "progressive-house", "deep-house", "electro", "detroit-techno", "disco", "trance", "dubstep", "drum-and-bass", "minimal-techno"],
+    "acoustic_folk": ["acoustic", "folk", "singer-songwriter", "country", "bluegrass", "honky-tonk", "americana"],
+    "classical_jazz": ["classical", "jazz", "opera", "piano"],
+    "world": ["world-music", "brazil", "turkish", "mandopop", "cantopop", "indian", "malay", "forro"],
+    "soundtrack_misc": ["study", "sleep", "sad", "children", "comedy", "christmas", "anime", "disney"]
+}
+
+def obtener_grupo_genero(genero):
+    for grupo, lista in grupos_generos.items():
+        if genero in lista:
+            return lista
+    return [genero]
 
 # -------------------------
 # 📌 Recomendación
@@ -93,7 +106,10 @@ n_recomendaciones = st.slider("📊 Número de recomendaciones", min_value=1, ma
 def recomendar_kmeans(df, track_name, artist, n=5):
     seleccion = df[(df['track_name'] == track_name) & (df['artists'] == artist)].iloc[0]
     cluster = seleccion['cluster']
-    df_cluster = df[df['cluster'] == cluster].copy()
+    genero_base = seleccion['track_genre']
+    grupo_genero = obtener_grupo_genero(genero_base)
+
+    df_cluster = df[(df['cluster'] == cluster) & (df['track_genre'].isin(grupo_genero))].copy()
     df_cluster = df_cluster[(df_cluster['track_name'] != track_name) | (df_cluster['artists'] != artist)]
 
     seleccion_idx = seleccion.name
