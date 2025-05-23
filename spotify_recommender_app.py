@@ -6,58 +6,64 @@ from sklearn.metrics.pairwise import cosine_similarity
 # Cargar datos
 df = pd.read_csv("spotify_scaled.csv")
 
-# Preprocesamiento: quedarnos solo con una fila por canción+artista (la de mayor popularidad)
+# Preprocesamiento: mantener solo una fila por canción+artista (la más popular)
 df = df.sort_values("popularity", ascending=False).drop_duplicates(subset=["track_name", "artists"])
 
-# Columnas usadas para el modelo
+# Columnas que se usan para la recomendación
 feature_cols = ['danceability', 'energy', 'valence', 'acousticness', 'instrumentalness',
                 'liveness', 'speechiness', 'loudness', 'tempo']
 
-# Sidebar - Filtros
+# -----------------------------
+# 🧭 SIDEBAR - PANEL DE FILTROS
+# -----------------------------
 st.sidebar.header("🎛️ Filtros de Canciones")
 
-# Filtro por género musical (multi-selección)
-generos = df['track_genre'].unique().tolist()
-generos_seleccionados = st.sidebar.multiselect(
-    "Géneros musicales",
-    options=generos,
-    default=generos
-)
-
-# Filtros por características numéricas (rangos)
-filtros_rango = {}
-for col in ['acousticness', 'instrumentalness', 'liveness', 'speechiness', 'valence']:
-    min_val = float(df[col].min())
-    max_val = float(df[col].max())
-    filtros_rango[col] = st.sidebar.slider(
-        f"{col.capitalize()}",
-        min_value=min_val,
-        max_value=max_val,
-        value=(min_val, max_val)
+# 🎶 Géneros musicales con multiselect dentro de expander
+with st.sidebar.expander("🎶 Géneros musicales"):
+    generos = df['track_genre'].unique().tolist()
+    generos_seleccionados = st.multiselect(
+        "Selecciona uno o varios géneros:",
+        options=generos,
+        default=generos
     )
 
-# Aplicar filtros al dataframe
+# 🎚️ Filtros numéricos (acousticness, etc.)
+with st.sidebar.expander("🧪 Filtrar por características"):
+    filtros_rango = {}
+    for col in ['acousticness', 'instrumentalness', 'liveness', 'speechiness', 'valence']:
+        min_val = float(df[col].min())
+        max_val = float(df[col].max())
+        filtros_rango[col] = st.slider(
+            f"{col.capitalize()}",
+            min_value=min_val,
+            max_value=max_val,
+            value=(min_val, max_val)
+        )
+
+# Aplicar los filtros al dataframe
 df_filtrado = df[df['track_genre'].isin(generos_seleccionados)].copy()
 for col, (min_val, max_val) in filtros_rango.items():
     df_filtrado = df_filtrado[(df_filtrado[col] >= min_val) & (df_filtrado[col] <= max_val)]
 
-# Eliminar duplicados (si vuelven a surgir) tras filtrar
+# Eliminar duplicados tras filtrar (por si acaso)
 df_filtrado = df_filtrado.sort_values("popularity", ascending=False).drop_duplicates(subset=["track_name", "artists"])
-
-# Crear columna combo "nombre - artista"
 df_filtrado['combo'] = df_filtrado['track_name'] + " - " + df_filtrado['artists']
 
-# Interfaz principal
+# -----------------------------
+# 🎧 INTERFAZ PRINCIPAL
+# -----------------------------
 st.title("🎧 Recomendador de Canciones - Spotify")
 
-# Desplegable de canciones con opción en blanco
+# Desplegable de canciones con opción vacía
 canciones_opciones = [""] + df_filtrado['combo'].tolist()
 cancion_seleccionada = st.selectbox("Selecciona una canción:", canciones_opciones, index=0)
 
 # Selector de número de recomendaciones
 n_recomendaciones = st.slider("Número de recomendaciones", min_value=1, max_value=50, value=5)
 
-# Función de recomendación
+# ---------------------------------------
+# 🔍 Función para recomendar canciones
+# ---------------------------------------
 def recomendar_knn(df, track_name, artist, n=5):
     seleccion = df[(df['track_name'] == track_name) & (df['artists'] == artist)].iloc[0]
     genero_ref = seleccion['track_genre']
@@ -81,7 +87,9 @@ def recomendar_knn(df, track_name, artist, n=5):
 
     return resultados
 
-# Mostrar recomendaciones si hay una canción seleccionada
+# ---------------------------------------
+# ▶️ Mostrar resultados si hay selección
+# ---------------------------------------
 if cancion_seleccionada:
     nombre, artista = cancion_seleccionada.split(" - ", 1)
     recomendaciones = recomendar_knn(df_filtrado, nombre, artista, n=n_recomendaciones)
