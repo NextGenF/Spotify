@@ -29,10 +29,12 @@ X_num = scaler.fit_transform(df[feature_cols_num])
 encoder = OneHotEncoder(sparse_output=False)
 X_cat = encoder.fit_transform(df[feature_col_cat])
 
+columns_all = feature_cols_num + list(encoder.get_feature_names_out(feature_col_cat))
 df_num = pd.DataFrame(X_num, columns=feature_cols_num)
 df_cat = pd.DataFrame(X_cat, columns=encoder.get_feature_names_out(feature_col_cat))
 
-X_all = pd.concat([df_num, df_cat], axis=1)
+X_all = pd.concat([df_num, df_cat], axis=1, ignore_index=True)
+X_all.index = df.index
 
 # -------------------------
 # 🧠 Modelo K-Means
@@ -71,7 +73,7 @@ for col, (min_val, max_val) in filtros_rango.items():
 # -------------------------
 # 🎧 INTERFAZ PRINCIPAL
 # -------------------------
-st.title("🎧 Recomendador de Canciones Spotify")
+st.title("🎧 Recomendador de Canciones (Modelo K-Means)")
 
 # Filtro de artista (solo para desplegable de canciones)
 artistas = sorted(df_filtrado['artists'].unique())
@@ -94,9 +96,9 @@ def recomendar_kmeans(df, track_name, artist, n=5):
     df_cluster = df[df['cluster'] == cluster].copy()
     df_cluster = df_cluster[(df_cluster['track_name'] != track_name) | (df_cluster['artists'] != artist)]
 
-    features = df_num.columns.tolist() + list(encoder.get_feature_names_out(feature_col_cat))
-    seleccion_vec = X_all[(df['track_name'] == track_name) & (df['artists'] == artist)].iloc[0].values.reshape(1, -1)
-    feature_data = X_all[df_cluster.index]
+    seleccion_idx = seleccion.name
+    seleccion_vec = X_all.loc[seleccion_idx].values.reshape(1, -1)
+    feature_data = X_all.loc[df_cluster.index]
 
     similitudes = cosine_similarity(seleccion_vec, feature_data)[0]
     df_cluster['similitud'] = similitudes
