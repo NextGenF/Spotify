@@ -39,21 +39,48 @@ X_all = pd.concat([df_num, df_cat], axis=1)
 # -------------------------
 kmeans = KMeans(n_clusters=15, random_state=42, n_init=10)
 df['cluster'] = kmeans.fit_predict(X_all)
-
 df['combo'] = df['track_name'] + " - " + df['artists']
 
 # -------------------------
-# 🎛️ Interfaz de Usuario
+# 🎛️ BARRA LATERAL DE FILTROS
+# -------------------------
+st.sidebar.header("🎛️ Filtros de Canciones")
+
+# Filtro por género
+with st.sidebar.expander("🎶 Género musical"):
+    generos = sorted(df['track_genre'].dropna().unique().tolist())
+    genero_seleccionado = st.selectbox("Selecciona un género:", ["Seleccionar todos"] + generos)
+
+# Filtros numéricos
+with st.sidebar.expander("🎚️ Filtrar por características musicales"):
+    filtros_rango = {}
+    for col in ['acousticness', 'instrumentalness', 'liveness', 'speechiness', 'valence']:
+        min_val, max_val = float(df[col].min()), float(df[col].max())
+        filtros_rango[col] = st.slider(
+            f"{col.capitalize()}", min_value=min_val, max_value=max_val, value=(min_val, max_val)
+        )
+
+# Aplicar filtros al DataFrame
+df_filtrado = df.copy()
+if genero_seleccionado != "Seleccionar todos":
+    df_filtrado = df_filtrado[df_filtrado['track_genre'] == genero_seleccionado]
+
+for col, (min_val, max_val) in filtros_rango.items():
+    df_filtrado = df_filtrado[(df_filtrado[col] >= min_val) & (df_filtrado[col] <= max_val)]
+
+# -------------------------
+# 🎧 INTERFAZ PRINCIPAL
 # -------------------------
 st.title("🎧 Recomendador de Canciones (Modelo K-Means)")
 
-artistas = sorted(df['artists'].unique())
+# Filtro de artista (solo para desplegable de canciones)
+artistas = sorted(df_filtrado['artists'].unique())
 artista_ui = st.selectbox("🎤 Filtrar canciones por artista:", [""] + artistas)
 
 if artista_ui:
-    canciones_opciones = sorted(df[df['artists'] == artista_ui]['combo'].tolist())
+    canciones_opciones = sorted(df_filtrado[df_filtrado['artists'] == artista_ui]['combo'].tolist())
 else:
-    canciones_opciones = sorted(df['combo'].tolist())
+    canciones_opciones = sorted(df_filtrado['combo'].tolist())
 
 cancion_seleccionada = st.selectbox("🎵 Selecciona una canción:", [""] + canciones_opciones)
 n_recomendaciones = st.slider("📊 Número de recomendaciones", min_value=1, max_value=50, value=5)
@@ -88,8 +115,8 @@ def recomendar_kmeans(df, track_name, artist, n=5):
 # -------------------------
 if cancion_seleccionada:
     nombre, artista = cancion_seleccionada.split(" - ", 1)
-    if df[(df['track_name'] == nombre) & (df['artists'] == artista)].empty:
-        st.warning("⚠️ La canción seleccionada no está disponible.")
+    if df_filtrado[(df_filtrado['track_name'] == nombre) & (df_filtrado['artists'] == artista)].empty:
+        st.warning("⚠️ La canción seleccionada no está disponible con los filtros aplicados.")
     else:
         recomendaciones = recomendar_kmeans(df, nombre, artista, n=n_recomendaciones)
         st.write(f"### Recomendaciones para: **{nombre} - {artista}**")
