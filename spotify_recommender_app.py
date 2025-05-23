@@ -10,7 +10,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 # -------------------------
 @st.cache_data
 def cargar_datos():
-    df = pd.read_csv("spotify_scaled_final.csv")
+    df = pd.read_csv("spotify_scaled.csv")
     df = df.sort_values("popularity", ascending=False).drop_duplicates(subset=["track_name", "artists"])
     return df
 
