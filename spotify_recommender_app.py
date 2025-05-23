@@ -71,7 +71,7 @@ for col, (min_val, max_val) in filtros_rango.items():
 # -------------------------
 # 🎧 INTERFAZ PRINCIPAL
 # -------------------------
-st.title("🎧 Recomendador de Canciones (Modelo K-Means)")
+st.title("🎧 Recomendador de Canciones Spotify")
 
 # Filtro de artista (solo para desplegable de canciones)
 artistas = sorted(df_filtrado['artists'].unique())
