@@ -6,54 +6,46 @@ from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import cosine_similarity
 
 # -------------------------
-# 📥 Cargar datos
+# 📥 Cargar y procesar datos (cacheado)
 # -------------------------
 @st.cache_data
-def cargar_datos():
+def cargar_y_preprocesar():
     df = pd.read_csv("spotify_scaled.csv")
     df = df.sort_values("popularity", ascending=False).drop_duplicates(subset=["track_name", "artists"])
-    return df
 
-df = cargar_datos()
+    feature_cols_num = ['danceability', 'energy', 'valence', 'acousticness',
+                        'instrumentalness', 'liveness', 'speechiness', 'loudness', 'tempo', 'popularity']
+    feature_col_cat = ['track_genre']
 
-# -------------------------
-# ⚙️ Preprocesamiento
-# -------------------------
-feature_cols_num = ['danceability', 'energy', 'valence', 'acousticness',
-                    'instrumentalness', 'liveness', 'speechiness', 'loudness', 'tempo', 'popularity']
-feature_col_cat = ['track_genre']
+    scaler = StandardScaler()
+    X_num = scaler.fit_transform(df[feature_cols_num])
 
-scaler = StandardScaler()
-X_num = scaler.fit_transform(df[feature_cols_num])
+    encoder = OneHotEncoder(sparse_output=False)
+    X_cat = encoder.fit_transform(df[feature_col_cat])
 
-encoder = OneHotEncoder(sparse_output=False)
-X_cat = encoder.fit_transform(df[feature_col_cat])
+    df_num = pd.DataFrame(X_num, columns=feature_cols_num)
+    df_cat = pd.DataFrame(X_cat, columns=encoder.get_feature_names_out(feature_col_cat))
 
-columns_all = feature_cols_num + list(encoder.get_feature_names_out(feature_col_cat))
-df_num = pd.DataFrame(X_num, columns=feature_cols_num)
-df_cat = pd.DataFrame(X_cat, columns=encoder.get_feature_names_out(feature_col_cat))
+    X_all = pd.concat([df_num, df_cat], axis=1, ignore_index=True)
+    X_all.index = df.index
 
-X_all = pd.concat([df_num, df_cat], axis=1, ignore_index=True)
-X_all.index = df.index
+    kmeans = KMeans(n_clusters=15, random_state=42, n_init=10)
+    df['cluster'] = kmeans.fit_predict(X_all)
+    df['combo'] = df['track_name'] + " - " + df['artists']
 
-# -------------------------
-# 🧠 Modelo K-Means
-# -------------------------
-kmeans = KMeans(n_clusters=15, random_state=42, n_init=10)
-df['cluster'] = kmeans.fit_predict(X_all)
-df['combo'] = df['track_name'] + " - " + df['artists']
+    return df, X_all, scaler, encoder
+
+df, X_all, scaler, encoder = cargar_y_preprocesar()
 
 # -------------------------
 # 🎛️ BARRA LATERAL DE FILTROS
 # -------------------------
 st.sidebar.header("🎛️ Filtros de Canciones")
 
-# Filtro por género
 with st.sidebar.expander("🎶 Género musical"):
     generos = sorted(df['track_genre'].dropna().unique().tolist())
     genero_seleccionado = st.selectbox("Selecciona un género:", ["Seleccionar todos"] + generos)
 
-# Filtros numéricos
 with st.sidebar.expander("🎚️ Filtrar por características musicales"):
     filtros_rango = {}
     for col in ['acousticness', 'instrumentalness', 'liveness', 'speechiness', 'valence']:
@@ -62,11 +54,10 @@ with st.sidebar.expander("🎚️ Filtrar por características musicales"):
             f"{col.capitalize()}", min_value=min_val, max_value=max_val, value=(min_val, max_val)
         )
 
-# Estado para mantener selección
 if 'cancion_seleccionada' not in st.session_state:
     st.session_state['cancion_seleccionada'] = ""
 
-# Aplicar filtros al DataFrame
+# Aplicar filtros
 df_filtrado = df.copy()
 if genero_seleccionado != "Seleccionar todos":
     df_filtrado = df_filtrado[df_filtrado['track_genre'] == genero_seleccionado]
@@ -77,7 +68,7 @@ for col, (min_val, max_val) in filtros_rango.items():
 # -------------------------
 # 🎧 INTERFAZ PRINCIPAL
 # -------------------------
-st.title("🎧 Recomendador de Canciones (Modelo K-Means)")
+st.title("🎧 Recomendador de Canciones Spotify")
 
 canciones_opciones = sorted(df_filtrado['combo'].tolist())
 seleccion = st.selectbox(
@@ -116,8 +107,7 @@ def obtener_grupo_genero(genero):
 def recomendar_kmeans(df, track_name, artist, n=5):
     seleccion = df[(df['track_name'] == track_name) & (df['artists'] == artist)].iloc[0]
     cluster = seleccion['cluster']
-    genero_base = seleccion['track_genre']
-    grupo_genero = obtener_grupo_genero(genero_base)
+    grupo_genero = obtener_grupo_genero(seleccion['track_genre'])
 
     df_cluster = df[(df['cluster'] == cluster) & (df['track_genre'].isin(grupo_genero))].copy()
     df_cluster = df_cluster[(df_cluster['track_name'] != track_name) | (df_cluster['artists'] != artist)]
