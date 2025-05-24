@@ -38,22 +38,6 @@ def cargar_y_preprocesar():
 df, X_all, scaler, encoder = cargar_y_preprocesar()
 
 # -------------------------
-# 🌑 Estilo oscuro personalizado
-# -------------------------
-st.markdown("""
-    <style>
-    .main, .block-container {
-        background-color: #121212;
-        color: white;
-    }
-    .stSelectbox label, .stSlider label, .stDataFrame, .stMarkdown, .stTextInput label {
-        color: white !important;
-    }
-    .css-1d391kg { color: white; }
-    </style>
-""", unsafe_allow_html=True)
-
-# -------------------------
 # 🎛️ BARRA LATERAL DE FILTROS
 # -------------------------
 st.sidebar.header("🎛️ Filtros de Canciones")
