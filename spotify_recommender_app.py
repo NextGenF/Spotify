@@ -38,18 +38,28 @@ def cargar_y_preprocesar():
 df, X_all, scaler, encoder = cargar_y_preprocesar()
 
 # -------------------------
-# 🌑 Estilo oscuro personalizado
+# 🌑 Estilo oscuro personalizado completo
 # -------------------------
 st.markdown("""
     <style>
-    .main, .block-container {
-        background-color: #121212;
-        color: white;
-    }
-    .stSelectbox label, .stSlider label, .stDataFrame, .stMarkdown, .stTextInput label {
+    html, body, .main, .block-container {
+        background-color: #0e0e0e !important;
         color: white !important;
     }
-    .css-1d391kg { color: white; }
+    .st-emotion-cache-1v0mbdj, .st-emotion-cache-1y4p8pa {
+        background-color: #0e0e0e !important;
+    }
+    .stSelectbox label, .stSlider label, .stDataFrame, .stMarkdown, .stTextInput label, .stExpanderHeader {
+        color: white !important;
+    }
+    .stButton button {
+        background-color: #333;
+        color: white;
+    }
+    .stDataFrame table {
+        background-color: #1a1a1a;
+        color: white;
+    }
     </style>
 """, unsafe_allow_html=True)
 
