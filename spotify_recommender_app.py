@@ -70,20 +70,11 @@ for col, (min_val, max_val) in filtros_rango.items():
 # -------------------------
 st.title("🎧 Recomendador de Canciones Spotify")
 
-# Filtro por artista para acotar la lista del desplegable
-artista_filtro = st.text_input("Filtrar canciones por artista (opcional):")
-
-if artista_filtro:
-    df_canciones = df_filtrado[df_filtrado['artists'].str.contains(artista_filtro, case=False, na=False)]
-else:
-    df_canciones = df_filtrado
-
-canciones_opciones = sorted(df_canciones['combo'].tolist())
+canciones_opciones = sorted(df_filtrado['combo'].tolist())
 seleccion = st.selectbox(
     "🎵 Selecciona una canción:",
     [""] + canciones_opciones,
-    index=canciones_opciones.index(st.session_state['cancion_seleccionada']) + 1
-    if st.session_state['cancion_seleccionada'] in canciones_opciones else 0
+    index=canciones_opciones.index(st.session_state['cancion_seleccionada']) + 1 if st.session_state['cancion_seleccionada'] in canciones_opciones else 0
 )
 st.session_state['cancion_seleccionada'] = seleccion
 
