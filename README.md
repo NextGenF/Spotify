@@ -1,1 +1,2 @@
 # Proyecto Fin de Máster: SISTEMA DE RECOMENDACIÓN DE TEMAS MUSICALES PARA SPOTIFY
+Por: Valeria Sagastume
