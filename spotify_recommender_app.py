@@ -5,9 +5,7 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import cosine_similarity
 
-# -------------------------
-# 📥 Cargar y procesar datos (cacheado)
-# -------------------------
+
 @st.cache_data
 def cargar_y_preprocesar():
     df = pd.read_csv("spotify_scaled.csv")
@@ -37,9 +35,9 @@ def cargar_y_preprocesar():
 
 df, X_all, scaler, encoder = cargar_y_preprocesar()
 
-# -------------------------
-# 🎛️ BARRA LATERAL DE FILTROS
-# -------------------------
+
+# BARRA DE FILTROS
+
 st.sidebar.header("🎛️ Filtros de Canciones")
 
 with st.sidebar.expander("🎶 Género musical"):
@@ -65,9 +63,9 @@ if genero_seleccionado != "Seleccionar todos":
 for col, (min_val, max_val) in filtros_rango.items():
     df_filtrado = df_filtrado[(df_filtrado[col] >= min_val) & (df_filtrado[col] <= max_val)]
 
-# -------------------------
-# 🎧 INTERFAZ PRINCIPAL
-# -------------------------
+
+# INTERFAZ 
+
 st.title("🎧 Recomendador de Canciones Spotify")
 
 canciones_opciones = sorted(df_filtrado['combo'].tolist())
@@ -80,9 +78,9 @@ st.session_state['cancion_seleccionada'] = seleccion
 
 n_recomendaciones = st.slider("📊 Número de recomendaciones", min_value=1, max_value=50, value=5)
 
-# -------------------------
-# 📚 Grupos de géneros
-# -------------------------
+
+# Grupos de géneros
+
 grupos_generos = {
     "reggaeton": ["latin", "latino", "reggaeton", "salsa", "samba", "sertanejo", "mpb", "pagode"],
     "pop": ["pop", "dance", "dancehall", "electropop", "synth-pop", "indie pop", "power-pop", "pop-film", "show-tunes", "j-pop", "k-pop"],
@@ -101,9 +99,9 @@ def obtener_grupo_genero(genero):
             return lista
     return [genero]
 
-# -------------------------
-# 📌 Recomendación
-# -------------------------
+
+# Recomendación
+
 def recomendar_kmeans(df, track_name, artist, n=5):
     seleccion = df[(df['track_name'] == track_name) & (df['artists'] == artist)].iloc[0]
     cluster = seleccion['cluster']
@@ -128,9 +126,9 @@ def recomendar_kmeans(df, track_name, artist, n=5):
 
     return resultados
 
-# -------------------------
-# 📊 Mostrar resultados
-# -------------------------
+
+# Mostrar resultados
+
 if seleccion:
     nombre, artista = seleccion.split(" - ", 1)
     if df_filtrado[(df_filtrado['track_name'] == nombre) & (df_filtrado['artists'] == artista)].empty:
